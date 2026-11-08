@@ -2,7 +2,7 @@
 
 ## 1. Project Setup
 
-- [ ] 1.1 Створити `pyproject.toml` (Python `>=3.14`, залежності з `design.md`, dev-група `pytest`, `pytest-asyncio`, `[tool.pytest.ini_options] asyncio_mode = "auto"`, `testpaths = ["tests"]`), згенерувати `uv.lock`, додати `.gitignore` (`.venv/`, `__pycache__/`, `.env`, `.pytest_cache/`) і порожні пакети `app/`, `app/api/`, `app/worker/`.
+- [x] 1.1 Створити `pyproject.toml` (Python `>=3.14`, залежності з `design.md`, dev-група `pytest`, `pytest-asyncio`, `[tool.pytest.ini_options] asyncio_mode = "auto"`, `testpaths = ["tests"]`), згенерувати `uv.lock`, додати `.gitignore` (`.venv/`, `__pycache__/`, `.env`, `.pytest_cache/`) і порожні пакети `app/`, `app/api/`, `app/worker/`.
 - [ ] 1.2 Реалізувати `app/config.py`: клас `Settings(BaseSettings)` з полями й дефолтами з `design.md` та екземпляр `settings = Settings()`; тест `tests/test_config.py` (покриває сценарій «Значення з оточення перекриває дефолт» `service-runtime`): `LLM_RPM=30` в оточенні → `Settings().llm_rpm == 30`, без змінної → `60`.
 - [ ] 1.3 Створити `.env.example` з кожною змінною `Settings` (`DATABASE_URL`, `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_TIMEOUT_S`, `LLM_RPM`, `LLM_CONCURRENCY`, `STUB_DELAY_MIN_S`, `STUB_DELAY_MAX_S`) і значеннями для локального запуску з розділу 3 ROADMAP; тест: множина ключів `.env.example` дорівнює множині полів `Settings` (у верхньому регістрі).
 
