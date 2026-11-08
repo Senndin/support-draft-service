@@ -21,5 +21,10 @@ class Settings(BaseSettings):
     # пароль Basic Auth для /ui; порожній — інтерфейс без автентифікації
     operator_password: str = ""
 
+    # надсилання відповіді в хелпдеск і збої мока хелпдеску (частки від 0 до 1)
+    helpdesk_timeout_s: float = 10
+    mock_fail_rate: float = 0
+    mock_slow_rate: float = 0
+
 
 settings = Settings()

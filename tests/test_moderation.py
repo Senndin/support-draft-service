@@ -42,3 +42,10 @@ async def test_approve_after_reject_conflicts(client, session_factory):
 async def test_unknown_ticket_404(client, session_factory):
     assert (await client.post("/ui/tickets/999/reject")).status_code == 404
     assert (await client.post("/ui/tickets/999/approve", data={"final_message": "x"})).status_code == 404
+
+
+async def test_approve_resets_attempts_for_sending(client, session_factory):
+    ticket_id = await draft(session_factory, attempts=3, last_error="LLMError: timeout")
+    await client.post(f"/ui/tickets/{ticket_id}/approve", data={"final_message": "Текст"})
+    ticket = await get(session_factory, ticket_id)
+    assert (ticket.attempts, ticket.last_error) == (0, None)

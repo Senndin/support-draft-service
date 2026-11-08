@@ -23,3 +23,10 @@ def test_env_example_lists_every_setting():
 def test_operator_password_disabled_by_default(monkeypatch):
     monkeypatch.delenv("OPERATOR_PASSWORD", raising=False)
     assert Settings().operator_password == ""
+
+
+def test_helpdesk_and_mock_defaults(monkeypatch):
+    for name in ("HELPDESK_TIMEOUT_S", "MOCK_FAIL_RATE", "MOCK_SLOW_RATE"):
+        monkeypatch.delenv(name, raising=False)
+    s = Settings()
+    assert (s.helpdesk_timeout_s, s.mock_fail_rate, s.mock_slow_rate) == (10, 0, 0)

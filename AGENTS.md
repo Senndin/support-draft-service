@@ -23,7 +23,7 @@ UI — Jinja2 і звичайні HTML-форми, без JS-фреймворк�
 
 **Environment variables:** `.env.example` → `.env`; без LLM: `LLM_API_KEY=` (режим без ключа, статична чернетка), для швидкої перевірки — `STUB_DELAY_MIN_S=0 STUB_DELAY_MAX_S=0`
 
-**Address:** `localhost:8000` (`GET /health`); UI оператора — `localhost:8000/ui` (Basic Auth, якщо задано `OPERATOR_PASSWORD`)
+**Address:** `localhost:8000` (`GET /health`); UI оператора — `localhost:8000/ui` (Basic Auth, якщо задано `OPERATOR_PASSWORD`); мок хелпдеску — `localhost:8000/mock/helpdesk/replies` (отримані відповіді, збої — `MOCK_FAIL_RATE`, `MOCK_SLOW_RATE`)
 
 **Test data:** статті бази знань — `kb/articles/*.md` (сіються сервісом `migrate`, вручну — `uv run python -m scripts.seed_kb`); пакет подій на вебхук — `uv run python -m scripts.send_webhooks --count 20 --dup-rate 0.2 --concurrency 10`
 

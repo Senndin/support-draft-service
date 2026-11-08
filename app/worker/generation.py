@@ -17,6 +17,7 @@ from app.config import settings
 from app.models import Ticket
 from app.services.kb import search
 from app.services.llm import generate_draft
+from app.worker.loop import run_queue
 
 log = logging.getLogger(__name__)
 
@@ -109,35 +110,19 @@ async def release(factory: async_sessionmaker, ids: list[int]) -> None:
 
 
 async def run(factory: async_sessionmaker, client: httpx.AsyncClient, stop: asyncio.Event) -> None:
-    """Обробляє чергу, доки не встановлено `stop`; потім дочікується поточних задач або відпускає їх."""
-    running: dict[asyncio.Task, int] = {}
-    while not stop.is_set():
-        free = settings.llm_concurrency - len(running)
-        claimed = []
-        if free > 0:
-            try:
-                async with factory() as session:
-                    claimed = await claim(session, free)
-            except Exception:  # noqa: BLE001 — БД тимчасово недоступна: пробуємо знову
-                log.exception("claim failed")
-        for ticket in claimed:
-            task = asyncio.create_task(process(factory, ticket, client))
-            running[task] = ticket.id
-            task.add_done_callback(lambda t: running.pop(t, None))
-        if not claimed:
-            try:
-                await asyncio.wait_for(stop.wait(), POLL_S)
-            except TimeoutError:
-                pass
+    """Обробляє чергу генерації, доки не встановлено `stop`; потім дочікується поточних задач або відпускає їх."""
 
-    if running:
-        log.info("stopping: waiting for %s generation(s)", len(running))
-        _, pending = await asyncio.wait(list(running), timeout=SHUTDOWN_GRACE_S)
-        # id беремо до скасування: done-callback прибирає задачі з running
-        unfinished = [running[t] for t in pending]
-        for task in pending:
-            task.cancel()
-        await asyncio.gather(*pending, return_exceptions=True)
-        if unfinished:
-            log.info("releasing %s unfinished ticket(s)", len(unfinished))
-            await release(factory, unfinished)
+    async def claim_batch(limit: int) -> list[Ticket]:
+        async with factory() as session:
+            return await claim(session, limit)
+
+    await run_queue(
+        "generation",
+        claim_batch,
+        lambda ticket: process(factory, ticket, client),
+        lambda ids: release(factory, ids),
+        settings.llm_concurrency,
+        stop,
+        POLL_S,
+        SHUTDOWN_GRACE_S,
+    )

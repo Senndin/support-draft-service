@@ -102,8 +102,17 @@ async def approve(
     text = final_message.strip()
     if not text:
         raise HTTPException(422, "Текст відповіді порожній")
+    # лічильник спроб і помилка генерації обнуляються: далі вони рахують лише надсилання
     return await decide(
-        request, session, ticket_id, status="approved", final_message=text, idempotency_key=uuid.uuid4()
+        request,
+        session,
+        ticket_id,
+        status="approved",
+        final_message=text,
+        idempotency_key=uuid.uuid4(),
+        attempts=0,
+        last_error=None,
+        next_attempt_at=func.now(),
     )
 
 
