@@ -1,98 +1,77 @@
-# {Project name}
+# Support Draft Service
 
-{One or two sentences: what this project is, who it is for and what problem it solves.}
-
-<!--
-This file describes the project for AI agents and developers, and at the same time configures DevSkills for it.
-Fill in the sections below before applying DevSkills for the first time.
-Do not rename the `Running`, `Testing`, `Database migrations`, `Code style` and `Commit style` headings — skills look them up by name.
-Delete sections that do not apply to the project and keep the rest short: this file lands in the context of every agent session.
--->
+Сервіс приймає звернення в підтримку з хелпдеску, готує чернетку відповіді через LLM на основі бази знань і після підтвердження оператором надсилає відповідь клієнту.
+Тестове завдання AI-first Backend Engineer; бюджет ~3 години, скоуп не розширювати понад `docs/ROADMAP.md`.
 
 ## Key sources
 
-Project description for developers:
-{@README.md or another file; delete this line if there is no such document}
-
 Other documents the agent should start from:
-{@docs/architecture.md, @docs/domain.md, etc.}
+@docs/ROADMAP.md — що будуємо, етапи та критерії приймання (працювати строго по одному етапу).
+`docs/decisions.md` — зафіксовані рішення (1–3 рядки на рішення); неоднозначності фіксувати там, а не питати.
 
 ## Stack
 
-{languages, frameworks, database, infrastructure — whatever determines how code should be written}
+Python 3.14, FastAPI, SQLAlchemy 2.0 (async) + asyncpg, Alembic, PostgreSQL 16, httpx, pydantic-settings.
+UI — Jinja2 і звичайні HTML-форми, без JS-фреймворків.
+Черга задач — таблиця в PostgreSQL (`SELECT ... FOR UPDATE SKIP LOCKED`); Redis, Celery та інші брокери заборонені.
+Залежності — лише `uv`.
+Коментарі в коді — українською; код максимально простий, без зайвих абстракцій.
 
 ## Running
 
-**Start:** `{command that starts the dev server, CLI or build}`
+**Start:** `cp .env.example .env && docker compose up --build` (сервіси `db`, `migrate`, `api`, `worker`)
 
-**Environment variables:** `{file with the variables and required values}`
+**Environment variables:** `.env.example` → `.env`
 
-**Address:** `{host:port the application is served at}`
+**Address:** `localhost:8000` (`GET /health`)
 
-**Test data:** `{command that seeds the database, or path to fixtures}`
+**Test data:** немає до етапу 3 (сід бази знань запускатиметься сервісом `migrate`)
 
 ## Testing
 
-<!-- Source of truth for the dev-test skill: it reads this section before every test run. -->
+**Runner:** `pytest` + `pytest-asyncio` (`asyncio_mode = "auto"`)
 
-**Runner:** `{test runner the project uses}`
+**Full run:** `uv run pytest`
 
-**Full run:** `{command that runs the whole suite}`
+**Targeted run:** `uv run pytest tests/test_health.py::test_health_returns_ok`
 
-**Targeted run:** `{command that runs a single module or test case}`
+**Test location:** `tests/test_<module>.py`
 
-**Test location:** `{where tests live and how they are named}`
-
-**Slow or excluded suites:** `{what the default run leaves out and how to run it separately}`
+**Slow or excluded suites:** немає; сценарії, що потребують Docker (підйом стеку, повторні міграції), перевіряються вручну через `acceptance.md`
 
 ## Database migrations
 
-<!-- Source of truth for the dev-migrate-db skill. Delete this section if the project does not write SQL migrations by hand. -->
+**SQL dialect:** `PostgreSQL 16`
 
-**SQL dialect:** `{for example MySQL 8.0, PostgreSQL 16}`
+**Database schema:** `app/models.py` (SQLAlchemy-моделі)
 
-**Database schema:** `{directory holding the database schema, if any}`
+**Migration location:** `migrations/versions/` (Alembic)
 
-**Migration location:** `{directory holding the project's migrations}`
-
-**Naming and up/down pairs:** `{file name pattern and how the forward and reverse scripts are paired}`
+**Naming and up/down pairs:** `uv run alembic revision -m "<опис>"` → `<revision>_<опис>.py` з функціями `upgrade()` / `downgrade()` в одному файлі
 
 Migrations born inside a change are collected by `dev-apply-change` into `dev/changes/{name}/db-migration.up.sql` and `db-migration.down.sql`.
 
 ## Code style
 
 Project guide:
-<!-- @docs/code_style_guide.md -->
-
 Uncomment the link once the guide exists: it is read by `dev-apply-change`, `dev-refactor`, `dev-docs` and `dev-review`, and through the latter by `dev-verify-change` too.
 Without a guide these skills follow the conventions the existing code demonstrates.
 
 ## Commit style
 
-<!-- Source of truth for the dev-commit skill: it reads this section before generating every message. -->
-
-**Message language:** `{English or another language; this is not the artifact language — it is the Git history}`
+**Message language:** `English`
 
 **Types:** `feat, fix, docs, refactor, test, chore, perf, build, ci, style`
 
-**Scope:** `{whether a scope is used and where it comes from — module, directory, domain; or "not used"}`
+**Scope:** `not used`
 
-**Issue number format:** `{one of the patterns below}`
+**Issue number format:** `{type}: {subject}`
 
 **Maximum subject length:** `72`
 
 **Co-authorship trailer:** `no`
 
-<!-- `yes` appends the co-authorship trailer the agent's environment provides, such as `Co-Authored-By: ...`; `no` keeps it out even when the environment asks for it. -->
-
-Issue number patterns — pick one and keep it in the field above:
-
-| Pattern | Example |
-| ------- | ------- |
-| `#{issue} {type}: {subject}` | `#345 feat: sync Features section with spec files` |
-| `{type}: {subject} (#{issue})` | `feat: sync Features section with spec files (#345)` |
-| `{type}: {subject}` + footer `Refs #{issue}` | two lines; incompatible with the single-line message rule |
-| `{type}: {subject}` | `feat: sync Features section with spec files` — issue numbers are not used |
+Історія комітів «як є», без squash; після кожного етапу — тести, потім коміт.
 
 Example messages:
 

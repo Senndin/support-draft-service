@@ -12,7 +12,7 @@ OR = "АБО"
 BUT = "АЛЕ"
 
 [dialog]
-language = "en"
+language = "ru"
 
 [apply]
 review = "task"

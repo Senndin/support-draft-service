@@ -1,0 +1,8 @@
+"""Async engine і фабрика сесій PostgreSQL. Підключення відкривається ліниво, при першому запиті."""
+
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+from app.config import settings
+
+engine = create_async_engine(settings.database_url)
+SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
