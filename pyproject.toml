@@ -11,6 +11,8 @@ dependencies = [
     "alembic",
     "pydantic-settings",
     "httpx",
+    "jinja2>=3.1.6",
+    "python-multipart>=0.0.33",
 ]
 
 [dependency-groups]

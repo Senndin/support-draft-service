@@ -18,5 +18,8 @@ class Settings(BaseSettings):
     stub_delay_min_s: float = 5
     stub_delay_max_s: float = 30
 
+    # пароль Basic Auth для /ui; порожній — інтерфейс без автентифікації
+    operator_password: str = ""
+
 
 settings = Settings()

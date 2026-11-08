@@ -18,3 +18,8 @@ def test_env_example_lists_every_setting():
     with open(".env.example") as f:
         keys = {line.split("=", 1)[0].strip() for line in f if "=" in line and not line.lstrip().startswith("#")}
     assert keys == {name.upper() for name in Settings.model_fields}
+
+
+def test_operator_password_disabled_by_default(monkeypatch):
+    monkeypatch.delenv("OPERATOR_PASSWORD", raising=False)
+    assert Settings().operator_password == ""

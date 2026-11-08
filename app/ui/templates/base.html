@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Оператор{% endblock %} · Support Draft Service</title>
+  {% block head %}{% endblock %}
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 1.5rem; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: .4rem; vertical-align: top; text-align: left; }
+    td.text { white-space: pre-wrap; max-width: 30rem; }
+    textarea { width: 100%; min-height: 12rem; }
+    .status { font-family: monospace; }
+  </style>
+</head>
+<body>
+  <p><a href="/ui">← Усі звернення</a></p>
+  {% block content %}{% endblock %}
+</body>
+</html>

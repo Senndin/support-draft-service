@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Вже оброблено{% endblock %}
+{% block content %}
+<h1>Звернення вже оброблено</h1>
+<p>Поточний статус: <span class="status">{{ status }}</span>. Рішення не змінено.</p>
+<p><a href="/ui/tickets/{{ ticket_id }}">Відкрити картку звернення</a></p>
+{% endblock %}

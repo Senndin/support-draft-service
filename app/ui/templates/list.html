@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Звернення{% endblock %}
+{% block head %}<meta http-equiv="refresh" content="10">{% endblock %}
+{% block content %}
+<h1>Звернення</h1>
+<form method="get" action="/ui">
+  <label>Статус:
+    <select name="status">
+      <option value="">усі</option>
+      {% for s in statuses %}<option value="{{ s }}"{% if s == status %} selected{% endif %}>{{ s }}</option>{% endfor %}
+    </select>
+  </label>
+  <button type="submit">Показати</button>
+</form>
+<table>
+  <tr><th>Статус</th><th>Ticket</th><th>Email</th><th>Повідомлення</th><th>Чернетка</th><th>Статті</th></tr>
+  {% for t in tickets %}
+  <tr>
+    <td class="status">{{ t.status }}</td>
+    <td><a href="/ui/tickets/{{ t.id }}">{{ t.ticket_id }}</a></td>
+    <td>{{ t.customer_email }}</td>
+    <td class="text">{{ t.message }}</td>
+    <td class="text">{{ t.draft or "" }}</td>
+    <td>{% for aid in t.article_ids or [] %}{% if aid in articles %}<a href="{{ articles[aid].url }}">{{ articles[aid].title }}</a><br>{% endif %}{% endfor %}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6">Звернень немає.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

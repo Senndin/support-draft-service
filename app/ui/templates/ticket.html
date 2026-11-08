@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{{ ticket.ticket_id }}{% endblock %}
+{% block content %}
+<h1>Звернення {{ ticket.ticket_id }}</h1>
+<p>Статус: <span class="status">{{ ticket.status }}</span> · {{ ticket.customer_email }}</p>
+<h2>Повідомлення клієнта</h2>
+<p class="text">{{ ticket.message }}</p>
+<h2>Статті</h2>
+<ul>
+  {% for aid in ticket.article_ids or [] %}{% if aid in articles %}<li><a href="{{ articles[aid].url }}">{{ articles[aid].title }}</a></li>{% endif %}{% else %}<li>немає</li>{% endfor %}
+</ul>
+{% if ticket.status == "draft_ready" %}
+<h2>Чернетка</h2>
+<form method="post" action="/ui/tickets/{{ ticket.id }}/approve">
+  <textarea name="final_message">{{ ticket.draft or "" }}</textarea>
+  <p>
+    <button type="submit">Approve</button>
+    <button type="submit" formaction="/ui/tickets/{{ ticket.id }}/reject">Reject</button>
+  </p>
+</form>
+{% else %}
+<h2>Чернетка</h2>
+<p class="text">{{ ticket.draft or "—" }}</p>
+{% if ticket.final_message %}<h2>Відповідь клієнту</h2><p class="text">{{ ticket.final_message }}</p>{% endif %}
+{% if ticket.last_error %}<p>Остання помилка: <code>{{ ticket.last_error }}</code></p>{% endif %}
+{% endif %}
+{% endblock %}
