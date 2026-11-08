@@ -21,7 +21,7 @@ UI — Jinja2 і звичайні HTML-форми, без JS-фреймворк�
 
 **Start:** `cp .env.example .env && docker compose up --build` (сервіси `db`, `migrate`, `api`, `worker`)
 
-**Environment variables:** `.env.example` → `.env`
+**Environment variables:** `.env.example` → `.env`; без LLM: `LLM_API_KEY=` (режим без ключа, статична чернетка), для швидкої перевірки — `STUB_DELAY_MIN_S=0 STUB_DELAY_MAX_S=0`
 
 **Address:** `localhost:8000` (`GET /health`)
 
