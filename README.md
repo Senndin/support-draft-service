@@ -18,7 +18,7 @@
 - [Демо](#демо)
 - [Архітектура](#архітектура)
 - [Як закрито вимоги ТЗ](#як-закрито-вимоги-тз)
-- [Швидкий старт](#швидкий-старт)
+- [Запуск локально](#запуск-локально)
 - [Налаштування LLM](#налаштування-llm)
 - [Змінні оточення](#змінні-оточення)
 - [Тести](#тести)
@@ -26,7 +26,6 @@
 - [Рішення і компроміси](#рішення-і-компроміси)
 - [Структура репозиторію](#структура-репозиторію)
 - [AI-first процес розробки](#ai-first-процес-розробки)
-- [Деплой](#деплой)
 - [Що далі](#що-далі)
 
 ## Що робить сервіс
@@ -108,9 +107,9 @@ stateDiagram-v2
 | Хелпдеск дає 5xx / таймаут, клієнт не має отримати відповідь двічі | стейт-машина `approved → sending → sent`, повтори з backoff і jitter, один `Idempotency-Key` | тести «2×5xx, потім 201» і «таймаут, але прийнято»; живий прогін із нестабільним моком |
 | Працювати без API-ключа | реальний запит до провайдера все одно робиться, відповідь — статична чернетка після затримки | тести режиму без ключа; ручна перевірка на стеку |
 
-## Швидкий старт
+## Запуск локально
 
-Потрібні Docker і [uv](https://docs.astral.sh/uv/) (для тестів і скриптів).
+Проєкт запускається локально в Docker: усі сервіси (PostgreSQL, міграції, API, воркер) піднімаються однією командою. Потрібні Docker і, для тестів і скриптів, [uv](https://docs.astral.sh/uv/).
 
 ```bash
 git clone https://github.com/Senndin/support-draft-service.git && cd support-draft-service
@@ -157,7 +156,7 @@ LLM_CONCURRENCY=2
 
 Якщо з контейнера `connection refused` — `launchctl setenv OLLAMA_HOST 0.0.0.0` і перезапуск Ollama.
 
-### Хмарний провайдер
+### Хмарний провайдер замість локальної моделі
 
 | Провайдер | `LLM_BASE_URL` | Модель (приклад) | Примітка |
 |---|---|---|---|
@@ -273,26 +272,6 @@ flowchart LR
 
 Інструкції для агента — [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md).
 
-## Деплой
-
-Цільова платформа — **Oracle Cloud Always Free**: повноцінна ВМ, де стек запускається тим самим `docker compose`, а воркер працює постійно (PaaS-тарифи без оплати не дають фонових процесів або присипляють сервіс, що ламає вимогу «вебхук ≤ 2 с»).
-
-1. Створити інстанс Always Free (Ampere A1, Ubuntu 24.04 — образи `python:3.14-slim` і `postgres:16` мультиархітектурні, ARM підходить).
-2. Відкрити порт: у VCN → Security List додати Ingress TCP `8000` (або `80/443` для reverse proxy); в Ubuntu-образах Oracle також `sudo iptables -I INPUT -p tcp --dport 8000 -j ACCEPT && sudo netfilter-persistent save`.
-3. Встановити Docker: `curl -fsSL https://get.docker.com | sh && sudo usermod -aG docker $USER` (перелогінитись).
-4. Розгорнути:
-
-```bash
-git clone https://github.com/Senndin/support-draft-service.git && cd support-draft-service
-cp .env.example .env
-# у .env: LLM_BASE_URL / LLM_API_KEY / LLM_MODEL хмарного провайдера (Groq або Gemini),
-#         LLM_RPM за лімітом ключа, LLM_REASONING_EFFORT= (порожньо), OPERATOR_PASSWORD=<сильний пароль>
-docker compose up -d --build
-```
-
-- PostgreSQL назовні не відкритий (`127.0.0.1`), назовні — лише порт `8000`; для HTTPS — reverse proxy (Caddy / nginx).
-- Хелпдеск налаштовується на `https://<домен>/webhooks/helpdesk`, оператор працює на `https://<домен>/ui` з паролем `OPERATOR_PASSWORD`.
-
 ## Що далі
 
 - Ліміт LLM і метрики черги (довжина, вік найстаршої задачі) у PostgreSQL для кількох воркерів.
@@ -300,3 +279,4 @@ docker compose up -d --build
 - Очищення `last_error` після успіху, обмеження довжини полів вебхука, зрозуміліша помилка сіду.
 - Ембеддинги для пошуку, коли статей стане сотні; триграмний індекс — уже на десятках.
 - Перевірка підпису вебхука й CSRF-токени у формах UI.
+- Публічний стенд: стек розрахований на будь-який сервер із Docker (`docker compose up -d --build`, `OPERATOR_PASSWORD` для `/ui`).
