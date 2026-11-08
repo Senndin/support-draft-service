@@ -1,0 +1,27 @@
+[artifacts]
+language = "uk"
+
+[artifacts.keywords]
+MUST = "МАЄ"
+MUST_NOT = "НЕ МАЄ"
+GIVEN = "ДАНО"
+WHEN = "ЯКЩО"
+THEN = "ТО"
+AND = "І / ТА"
+OR = "АБО"
+BUT = "АЛЕ"
+
+[dialog]
+language = "uk"
+
+[apply]
+review = "task"
+time_limit = 45
+
+[links]
+enabled = false
+threshold_seconds = 60
+
+[commit]
+auto_on_next = true
+auto_on_apply = "off"
