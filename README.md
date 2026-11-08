@@ -113,7 +113,7 @@ stateDiagram-v2
 Потрібні Docker і [uv](https://docs.astral.sh/uv/) (для тестів і скриптів).
 
 ```bash
-git clone <repo-url> support-draft-service && cd support-draft-service
+git clone https://github.com/Senndin/support-draft-service.git && cd support-draft-service
 cp .env.example .env
 docker compose up --build
 ```
@@ -275,10 +275,15 @@ flowchart LR
 
 ## Деплой
 
-Будь-який VPS з Docker:
+Цільова платформа — **Oracle Cloud Always Free**: повноцінна ВМ, де стек запускається тим самим `docker compose`, а воркер працює постійно (PaaS-тарифи без оплати не дають фонових процесів або присипляють сервіс, що ламає вимогу «вебхук ≤ 2 с»).
+
+1. Створити інстанс Always Free (Ampere A1, Ubuntu 24.04 — образи `python:3.14-slim` і `postgres:16` мультиархітектурні, ARM підходить).
+2. Відкрити порт: у VCN → Security List додати Ingress TCP `8000` (або `80/443` для reverse proxy); в Ubuntu-образах Oracle також `sudo iptables -I INPUT -p tcp --dport 8000 -j ACCEPT && sudo netfilter-persistent save`.
+3. Встановити Docker: `curl -fsSL https://get.docker.com | sh && sudo usermod -aG docker $USER` (перелогінитись).
+4. Розгорнути:
 
 ```bash
-git clone <repo-url> support-draft-service && cd support-draft-service
+git clone https://github.com/Senndin/support-draft-service.git && cd support-draft-service
 cp .env.example .env
 # у .env: LLM_BASE_URL / LLM_API_KEY / LLM_MODEL хмарного провайдера (Groq або Gemini),
 #         LLM_RPM за лімітом ключа, LLM_REASONING_EFFORT= (порожньо), OPERATOR_PASSWORD=<сильний пароль>
