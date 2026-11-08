@@ -265,7 +265,7 @@ Ollama на хостингу не буде, тому для публічного
 - Деплой (дуже бажано): будь-який хостинг, що вміє Docker + Postgres (Render / Railway / Koyeb або дешевий VPS з `docker compose up`). LLM — Groq або Gemini (розділ 3.2), увімкнути `OPERATOR_PASSWORD`. Публічні посилання на вебхук і `/ui` — у README.
 
 **Готово, коли**
-- Чиста машина: `git clone` → `docker compose up` → працює за інструкцією з README.
+- Чиста машина: `git clone` → `docker compose up` → працює за інструкцією з README. -- під час тесту цей єтап пропустити
 - Усі тести зелені.
 - Агентна конфігурація (`CLAUDE.md`, `specs/`, `docs/`, `.claude/`) закомічена.
 
