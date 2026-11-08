@@ -24,10 +24,10 @@ services:
       timeout: 3s
       retries: 30
 
-  # Одноразовий сервіс: застосовує міграції і завершується
+  # Одноразовий сервіс: застосовує міграції, сіє базу знань і завершується
   migrate:
     <<: *app
-    command: ["alembic", "upgrade", "head"]
+    command: ["sh", "-c", "alembic upgrade head && python -m scripts.seed_kb"]
     depends_on:
       db:
         condition: service_healthy

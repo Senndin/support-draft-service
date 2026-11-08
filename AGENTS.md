@@ -25,7 +25,7 @@ UI — Jinja2 і звичайні HTML-форми, без JS-фреймворк�
 
 **Address:** `localhost:8000` (`GET /health`)
 
-**Test data:** `uv run python -m scripts.send_webhooks --count 20 --dup-rate 0.2 --concurrency 10` — пакет подій на вебхук (сід бази знань — етап 3)
+**Test data:** статті бази знань — `kb/articles/*.md` (сіються сервісом `migrate`, вручну — `uv run python -m scripts.seed_kb`); пакет подій на вебхук — `uv run python -m scripts.send_webhooks --count 20 --dup-rate 0.2 --concurrency 10`
 
 ## Testing
 

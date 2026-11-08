@@ -1,10 +1,10 @@
-"""ORM-моделі. `Ticket` — і звернення, і черга задач; `KbArticle` додасться на етапі 3."""
+"""ORM-моделі. `Ticket` — і звернення, і черга задач; `KbArticle` — стаття бази знань."""
 
 import uuid
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, Index, Integer, Text, UniqueConstraint, func
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy import BigInteger, Computed, DateTime, Index, Integer, Text, UniqueConstraint, func
+from sqlalchemy.dialects.postgresql import ARRAY, TSVECTOR
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -51,3 +51,22 @@ class Ticket(Base):
 
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
+
+
+class KbArticle(Base):
+    """Стаття бази знань; `search_vector` рахує PostgreSQL (generated column)."""
+
+    __tablename__ = "kb_articles"
+    __table_args__ = (
+        UniqueConstraint("slug", name="uq_kb_articles_slug"),
+        Index("ix_kb_articles_search_vector", "search_vector", postgresql_using="gin"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    slug: Mapped[str] = mapped_column(Text)
+    title: Mapped[str] = mapped_column(Text)
+    body: Mapped[str] = mapped_column(Text)
+    url: Mapped[str] = mapped_column(Text)
+    search_vector: Mapped[str] = mapped_column(
+        TSVECTOR, Computed("to_tsvector('simple', title || ' ' || body)", persisted=True)
+    )

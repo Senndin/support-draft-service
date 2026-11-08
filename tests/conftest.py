@@ -74,3 +74,16 @@ async def client(session_factory):
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def kb(db_engine):
+    """Фабрика сесій до бази знань, засіяної статтями з `kb/articles`."""
+    from scripts.seed_kb import ARTICLES_DIR, load_articles, seed
+
+    async with db_engine.begin() as conn:
+        await conn.execute(text("TRUNCATE kb_articles RESTART IDENTITY"))
+    factory = async_sessionmaker(db_engine, expire_on_commit=False)
+    async with factory() as session:
+        await seed(session, load_articles(ARTICLES_DIR))
+    return factory
