@@ -62,10 +62,13 @@ async def _call_provider(client: httpx.AsyncClient, messages: list[dict], api_ke
     limiter, semaphore = _limits()
     await limiter.acquire()
     headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+    payload = {"model": settings.llm_model, "messages": messages}
+    if settings.llm_reasoning_effort:
+        payload["reasoning_effort"] = settings.llm_reasoning_effort
     async with semaphore:
         return await client.post(
             f"{settings.llm_base_url.rstrip('/')}/chat/completions",
-            json={"model": settings.llm_model, "messages": messages},
+            json=payload,
             headers=headers,
             timeout=settings.llm_timeout_s,
         )
@@ -106,6 +109,8 @@ async def generate_draft(message: str, articles: list[KbArticle], client: httpx.
         raise LLMError(f"LLM відповів {response.status_code}: {response.text[:200]}")
     try:
         text = response.json()["choices"][0]["message"]["content"]
-    except (ValueError, KeyError, IndexError, TypeError) as exc:
-        raise LLMError(f"неочікувана відповідь LLM без choices[0].message.content: {response.text[:200]}") from exc
+        if not text or not text.strip():
+            raise ValueError("порожній content")
+    except (ValueError, KeyError, IndexError, TypeError, AttributeError) as exc:
+        raise LLMError(f"неочікувана відповідь LLM без непорожнього choices[0].message.content: {response.text[:200]}") from exc
     return DraftResult(text=text, article_ids=article_ids)

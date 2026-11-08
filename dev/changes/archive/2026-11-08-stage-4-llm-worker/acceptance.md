@@ -38,7 +38,12 @@
 
 **Результат:**
 
-- [ ]
+- [failed] звернення `acc4-1` двічі впало з `LLMError: ReadTimeout` (`attempts=2`, статус `generating`): модель `qwen3.5:4b` за замовчуванням міркує тисячі токенів (5005 на коротке питання) і не вкладається в `LLM_TIMEOUT_S=60`; з `reasoning_effort: none` та сама модель відповідає за 2 с
+  - Root cause: `_call_provider` надсилає лише `model` і `messages`, тож режимом міркувань не можна керувати через оточення, і моделі з міркуванням за замовчуванням не вкладаються в `LLM_TIMEOUT_S`; окремо порожній `choices[0].message.content` приймається як чернетка -- `app/services/llm.py:68`, `app/services/llm.py:108`
+  - Reproducing test: при `llm_reasoning_effort="none"` тіло запиту містить `reasoning_effort: none`, при порожньому — не містить; відповідь з порожнім `content` дає `LLMError` -- `tests/test_llm.py:67`
+  - Fix: поле `llm_reasoning_effort` у `Settings` і `LLM_REASONING_EFFORT=` у `.env.example`; `reasoning_effort` у тілі запиту, лише якщо задано; порожній `content` → `LLMError` -- `app/config.py:15`, `app/services/llm.py:68`, `app/services/llm.py:108`
+  - Specification impact: declared: dev/specs/llm-draft/spec.md
+- [passed] повторний прогін після виправлення `86268b8`, виконано агентом на прохання користувача: з `LLM_REASONING_EFFORT=none` звернення `acc4-1b` → `draft_ready` з першої спроби за кілька секунд, чернетка українською з посиланням на `export-pdf`, у логах `draft ready` без трейсбеків
 
 ### 2. Режим без ключа
 
@@ -68,7 +73,7 @@
 
 **Результат:**
 
-- [ ]
+- [passed] виконано агентом на прохання користувача: звернення `acc4-2c` → `draft_ready` зі статичним шаблоном (назви й URL `cancel-subscription`, `payment-billing`), у логах `LLM без ключа відповів 200 (ігноруємо)`
 
 ### 3. Зупинка воркера під час генерації
 
@@ -98,4 +103,4 @@
 
 **Результат:**
 
-- [ ]
+- [passed] виконано агентом на прохання користувача: `docker compose stop worker` тривав 25.4 с, у логах `stopping: waiting for 1 generation(s)`, `releasing 1 unfinished ticket(s)`, `worker stopped` без трейсбеку; `acc4-3` → `received`, `locked_until` порожній, `attempts = 0`

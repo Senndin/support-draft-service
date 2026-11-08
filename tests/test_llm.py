@@ -137,3 +137,28 @@ async def test_concurrency_limit(no_key, monkeypatch):
     async with client_for(handler) as client:
         await asyncio.gather(*(generate_draft("питання", ARTICLES, client) for _ in range(5)))
     assert peak == 2
+
+
+# --- регресія: моделі з міркуванням і порожній content (приймання етапу 4, сценарій 1) ---
+
+
+async def test_reasoning_effort_is_sent_when_set(monkeypatch):
+    bodies = []
+
+    def handler(request):
+        bodies.append(json.loads(request.content))
+        return completion("ok")
+
+    async with client_for(handler) as client:
+        monkeypatch.setattr(settings, "llm_reasoning_effort", "none")
+        await generate_draft("питання", [], client)
+        monkeypatch.setattr(settings, "llm_reasoning_effort", "")
+        await generate_draft("питання", [], client)
+    assert bodies[0]["reasoning_effort"] == "none"
+    assert "reasoning_effort" not in bodies[1]
+
+
+async def test_empty_content_is_an_error():
+    async with client_for(lambda r: completion("  ")) as client:
+        with pytest.raises(LLMError, match="content"):
+            await generate_draft("питання", ARTICLES, client)
