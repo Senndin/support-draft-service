@@ -25,19 +25,19 @@ UI — Jinja2 і звичайні HTML-форми, без JS-фреймворк�
 
 **Address:** `localhost:8000` (`GET /health`)
 
-**Test data:** немає до етапу 3 (сід бази знань запускатиметься сервісом `migrate`)
+**Test data:** `uv run python -m scripts.send_webhooks --count 20 --dup-rate 0.2 --concurrency 10` — пакет подій на вебхук (сід бази знань — етап 3)
 
 ## Testing
 
 **Runner:** `pytest` + `pytest-asyncio` (`asyncio_mode = "auto"`)
 
-**Full run:** `uv run pytest`
+**Full run:** `docker compose up -d db && uv run pytest`
 
 **Targeted run:** `uv run pytest tests/test_health.py::test_health_returns_ok`
 
 **Test location:** `tests/test_<module>.py`
 
-**Slow or excluded suites:** немає; сценарії, що потребують Docker (підйом стеку, повторні міграції), перевіряються вручну через `acceptance.md`
+**Slow or excluded suites:** DB-тести (фікстура `db_engine`) працюють з окремою БД `support_test` на `localhost:${DB_PORT:-5432}` (перевизначається `TEST_DATABASE_URL`) і без PostgreSQL пропускаються — перед повним прогоном підняти `db`; сценарії, що потребують Docker (підйом стеку, повторні міграції), перевіряються вручну через `acceptance.md`
 
 ## Database migrations
 

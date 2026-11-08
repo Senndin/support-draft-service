@@ -6,3 +6,9 @@ from app.config import settings
 
 engine = create_async_engine(settings.database_url)
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
+
+
+async def get_session():
+    """FastAPI-залежність: сесія на один запит."""
+    async with SessionLocal() as session:
+        yield session

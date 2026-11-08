@@ -14,6 +14,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: support
+    ports:
+      - "${DB_PORT:-5432}:5432"  # для тестів з хоста
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
