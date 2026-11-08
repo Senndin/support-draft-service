@@ -56,13 +56,13 @@
 
 1. `uv run python -m scripts.send_webhooks --count 10 --dup-rate 0`
 2. Через ~5 с відкрити `http://localhost:8000/ui?status=draft_ready` і підтвердити (**Approve**) усі 10 нових звернень.
-3. Почекати ~1 хвилину і виконати: `docker compose exec -T db psql -U postgres -d support -c "select status, count(*), max(attempts) from tickets where ticket_id like 'T-%' group by status"`
+3. Почекати ~1 хвилину і виконати: `docker compose exec -T db psql -U postgres -d support -c "select status, count(*), max(attempts) from tickets where status in ('approved', 'sending', 'sent', 'send_failed') group by status"`
 4. `curl -s localhost:8000/mock/helpdesk/replies | python3 -c "import json,sys,collections; r=json.load(sys.stdin); c=collections.Counter(x['idempotency_key'] for x in r); print(len(r), 'replies;', sum(v>1 for v in c.values()), 'duplicate keys')"`
 5. `docker compose logs worker | grep -E "send attempt|reply sent" | tail -10`
 
 **Очікується:**
 
-- Усі 10 підтверджених звернень у статусі `sent`; у деяких `attempts` > 0 (були повтори).
+- Немає рядків `approved`, `sending` і `send_failed`: усі підтверджені звернення в `sent`, а `max(attempts)` > 0 (були повтори).
 - Скрипт кроку 4 показує `0 duplicate keys`, а відповідей рівно стільки, скільки звернень надіслано.
 - У логах воркера є рядки `send attempt N failed, retry in ...` (`500` або `ReadTimeout`) і `reply sent`.
 
