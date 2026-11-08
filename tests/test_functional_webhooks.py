@@ -79,7 +79,33 @@ async def test_scenario_sender_with_duplicates(client, session_factory):
     """Сценарії «Прогін із дублями» і «Звіт про відповіді»: 20 унікальних + 10 дублів → 20 рядків."""
     # фікстура client уже перевизначила сесію застосунку на тестову БД
     events = build_events(20, 0.5, "http://api:8000")
-    counts = await send_all(events, "http://test/webhooks/helpdesk", 10, ASGITransport(app=app))
+    counts, _ = await send_all(events, "http://test/webhooks/helpdesk", 10, ASGITransport(app=app))
     assert len(events) == 30
     assert counts == {202: 30}
     assert await count_tickets(session_factory) == 20
+
+
+async def test_scenario_latency_report(client, session_factory):
+    """Сценарій «Звіт про затримки» (`webhook-sender`)."""
+    from scripts.send_webhooks import latency_summary
+
+    counts, durations = await send_all(
+        build_events(20, 0, "http://api:8000"), "http://test/webhooks/helpdesk", 5, ASGITransport(app=app)
+    )
+    assert counts == {202: 20} and len(durations) == 20
+    line = latency_summary(durations)
+    p50, p99, mx = (int(part.split("=")[1]) for part in line.removeprefix("latency ms: ").split())
+    assert p50 <= p99 <= mx
+
+
+def test_scenario_no_latency_without_responses(capsys, monkeypatch):
+    """Сценарій «Без відповідей немає затримок»: недоступна адреса — лише `sent` і `error`."""
+    import sys
+
+    from scripts import send_webhooks
+
+    monkeypatch.setattr(sys, "argv", ["send_webhooks", "--url", "http://127.0.0.1:1/webhooks/helpdesk", "--count", "3", "--dup-rate", "0"])
+    send_webhooks.main()
+    out = capsys.readouterr().out
+    assert "sent: 3" in out and "error: 3" in out
+    assert "latency" not in out

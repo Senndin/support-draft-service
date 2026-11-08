@@ -6,6 +6,8 @@
 import argparse
 import asyncio
 import random
+import statistics
+import time
 import uuid
 from collections import Counter
 
@@ -35,23 +37,44 @@ def build_events(count: int, dup_rate: float, reply_base: str) -> list[dict]:
 
 async def send_all(
     events: list[dict], url: str, concurrency: int, transport: httpx.AsyncBaseTransport | None = None
-) -> Counter:
-    """Надсилає події не більше ніж `concurrency` одночасно; рахує відповіді за статусом, мережеві помилки — як `"error"`."""
+) -> tuple[Counter, list[float]]:
+    """Надсилає події не більше ніж `concurrency` одночасно.
+
+    Повертає лічильник відповідей за статусом (мережеві помилки — `"error"`) і тривалості
+    в секундах запитів, що отримали HTTP-відповідь.
+    """
     counts: Counter = Counter()
+    durations: list[float] = []
     limit = asyncio.Semaphore(concurrency)
 
     async with httpx.AsyncClient(transport=transport, timeout=10) as client:
 
         async def send(event: dict) -> None:
             async with limit:
+                started = time.perf_counter()
                 try:
                     response = await client.post(url, json=event)
-                    counts[response.status_code] += 1
                 except httpx.HTTPError:
                     counts["error"] += 1
+                    return
+                durations.append(time.perf_counter() - started)
+                counts[response.status_code] += 1
 
         await asyncio.gather(*(send(e) for e in events))
-    return counts
+    return counts, durations
+
+
+def latency_summary(durations: list[float]) -> str | None:
+    """`latency ms: p50=… p99=… max=…` у цілих мілісекундах; `None`, якщо вимірів немає."""
+    if not durations:
+        return None
+    ms = [d * 1000 for d in durations]
+    if len(ms) == 1:
+        p50 = p99 = ms[0]
+    else:
+        cuts = statistics.quantiles(ms, n=100, method="inclusive")
+        p50, p99 = cuts[49], cuts[98]
+    return f"latency ms: p50={round(p50)} p99={round(p99)} max={round(max(ms))}"
 
 
 def main() -> None:
@@ -64,10 +87,12 @@ def main() -> None:
     args = parser.parse_args()
 
     events = build_events(args.count, args.dup_rate, args.reply_base)
-    counts = asyncio.run(send_all(events, args.url, args.concurrency))
+    counts, durations = asyncio.run(send_all(events, args.url, args.concurrency))
     print(f"sent: {len(events)}")
     for status, n in sorted(counts.items(), key=lambda item: str(item[0])):
         print(f"{status}: {n}")
+    if summary := latency_summary(durations):
+        print(summary)
 
 
 if __name__ == "__main__":

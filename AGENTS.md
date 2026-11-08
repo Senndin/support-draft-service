@@ -5,6 +5,9 @@
 
 ## Key sources
 
+Project description for developers:
+@README.md
+
 Other documents the agent should start from:
 @docs/ROADMAP.md — що будуємо, етапи та критерії приймання (працювати строго по одному етапу).
 `docs/decisions.md` — зафіксовані рішення (1–3 рядки на рішення); неоднозначності фіксувати там, а не питати.
